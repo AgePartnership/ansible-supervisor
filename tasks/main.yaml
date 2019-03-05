@@ -1,54 +1,71 @@
+---
 - name: installing supervisor
-  pip: name=supervisor
-       version={{ supervisor_version }}
-       virtualenv={{ supervisor_virtualenv }}
-       use_mirrors=no
-       {% if pip_args %} "extra_args={{ pip_args }}" {% endif %}
+  pip: 
+    name: supervisor
+    version: "{{ supervisor_version }}"
+    virtualenv: "{{ supervisor_virtualenv }}"
+  when: not pip_args 
+
+- name: installing supervisor
+  pip: 
+    name: supervisor
+    version: "{{ supervisor_version }}"
+    virtualenv: "{{ supervisor_virtualenv }}"
+    extra_args: "{{ extra_args }}"
+  when: pip_args
 
 - name: ensuring required supervisor directories
-  file: path={{ item }}
-        state=directory
+  file:
+    path: "{{ item }}"
+    state: directory
   with_items:
-    - '{{ bin_dir }}'
-    - '{{ supervisor_config_dir }}'
+    - "{{ bin_dir }}"
+    - "{{ supervisor_config_dir }}"
 
 - name: installing supervisor configuration
-  template: src=supervisord.conf.j2
-            dest={{ supervisor_config }}
+  template:
+    src: supervisord.conf.j2
+    dest: "{{ supervisor_config }}"
 
 - name: installing wrapper scripts
-  template: src={{ item.src }}
-            dest={{ item.dest }}
-            mode=754
-  with_items:
+  template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0754
+  with_items:    
     - src: supervisorctl.sh.j2
-      dest: '{{ bin_dir }}/supervisorctl'
+      dest: '"{{ bin_dir }}"/supervisorctl'
     - src: supervisord.sh.j2
-      dest: '{{ bin_dir }}/supervisord'
+      dest: '"{{ bin_dir }}"/supervisord'
 
 - name: creating (optional) link parent dir
   when: supervisor_link != False
-  file: path={{ supervisor_link|dirname }} state=directory
+  file: 
+    path: "{{ supervisor_link|dirname }}"
+    state: directory
 
 - name: setting up supervisor (optional) symlink
   when: supervisor_link != False
-  file: src={{ supervisor_home }}
-        dest={{ supervisor_link }}
-        state=link
+  file: 
+    src: "{{ supervisor_home }}"
+    dest: "{{ supervisor_link }}"
+    state: link
 
 - name: installing supervisor http server
+  template: 
+    src: supervisor-http.ini.j2
+    dest: "{{ supervisor_config_dir }}/supervisor-http.ini"
+    mode: 0754
   when: supervisor_http
-  template: src=supervisor-http.ini.j2
-            dest={{ supervisor_config_dir }}/supervisor-http.ini
-            mode=754
 
 - name: checking if supervisord is running
-  shell: pgrep -u {{ ansible_user_id }} supervisor
+  shell: pgrep -u "{{ ansible_user_id }}" supervisor
   ignore_errors: on
   changed_when: off
   register: supervisor_running
 
 - name: running supervisord
-  shell: chdir={{ supervisor_home }}
-         {{ supervisord_path }} -c {{ supervisor_config }}
+  shell: "{{ supervisord_path }} -c {{ supervisor_config }}"
+  args:
+    chdir: "{{ supervisor_home }}"
   when: supervisor_running|failed
