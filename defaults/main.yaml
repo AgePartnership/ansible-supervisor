@@ -13,7 +13,7 @@ bin_dir: ~/bin
 supervisor_link: off # ~/path/to/symlink
 supervisor_link_parent: "{% if supervisor_link %}{{ supervisor_link|dirname }}{% endif %}"
 
-supervisor_http: off
+supervisor_http: false
 supervisor_http_host: 0.0.0.0
 supervisor_http_port: 9001
 
@@ -22,4 +22,5 @@ supervisor_http_auth: off
 #   username: foo
 #   password: bar
 
-pip_args: off # --index-url=http://my.custom.pypi/"
+pip_args: false
+extra_args: --index-url=http://my.custom.pypi/"
