@@ -4,15 +4,8 @@
     name: supervisor
     version: "{{ supervisor_version }}"
     virtualenv: "{{ supervisor_virtualenv }}"
-  when: not pip_args 
-
-- name: installing supervisor
-  pip: 
-    name: supervisor
-    version: "{{ supervisor_version }}"
-    virtualenv: "{{ supervisor_virtualenv }}"
-    extra_args: "{{ extra_args }}"
-  when: pip_args
+    use_mirrors: no
+    extra_args: "{% if pip_args %}{{ pip_args }}{% endif %}"
 
 - name: ensuring required supervisor directories
   file:
